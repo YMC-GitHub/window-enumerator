@@ -7,30 +7,30 @@ pub enum WindowError {
     ///
     /// Valid formats are: "all", "1,2,3", "1-3"
     InvalidSelectionFormat,
-    
+
     /// The position sort string format is invalid.
     ///
     /// Valid formats are: "x1", "y-1", "x1|y1"
     InvalidPositionSortFormat,
-    
+
     /// The range format is invalid.
     ///
     /// Valid range format is: "start-end" where start <= end
     InvalidRange,
-    
+
     /// The index cannot be parsed as a valid usize.
     InvalidIndex,
-    
+
     /// The sort order is invalid.
     ///
     /// Valid orders are: 1 (ascending) or -1 (descending)
     InvalidSortOrder,
-    
+
     /// A Windows API call failed.
     ///
     /// Contains the Windows error code.
     WindowsApiError(u32),
-    
+
     /// Other unspecified errors.
     Other(String),
 }
@@ -38,20 +38,22 @@ pub enum WindowError {
 impl fmt::Display for WindowError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            WindowError::InvalidSelectionFormat => 
-                write!(f, "Invalid selection format. Use 'all', '1,2,3', or '1-3'"),
-            WindowError::InvalidPositionSortFormat => 
-                write!(f, "Invalid position sort format. Use 'x1', 'y-1', or 'x1|y1'"),
-            WindowError::InvalidRange => 
-                write!(f, "Invalid range format"),
-            WindowError::InvalidIndex => 
-                write!(f, "Invalid index"),
-            WindowError::InvalidSortOrder => 
-                write!(f, "Sort order must be 1 (ascending) or -1 (descending)"),
-            WindowError::WindowsApiError(code) => 
-                write!(f, "Windows API error: 0x{:08x}", code),
-            WindowError::Other(msg) => 
-                write!(f, "{}", msg),
+            WindowError::InvalidSelectionFormat => {
+                write!(f, "Invalid selection format. Use 'all', '1,2,3', or '1-3'")
+            }
+            WindowError::InvalidPositionSortFormat => {
+                write!(
+                    f,
+                    "Invalid position sort format. Use 'x1', 'y-1', or 'x1|y1'"
+                )
+            }
+            WindowError::InvalidRange => write!(f, "Invalid range format"),
+            WindowError::InvalidIndex => write!(f, "Invalid index"),
+            WindowError::InvalidSortOrder => {
+                write!(f, "Sort order must be 1 (ascending) or -1 (descending)")
+            }
+            WindowError::WindowsApiError(code) => write!(f, "Windows API error: 0x{:08x}", code),
+            WindowError::Other(msg) => write!(f, "{}", msg),
         }
     }
 }

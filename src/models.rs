@@ -33,8 +33,10 @@ impl WindowInfo {
         println!("Class Name: {}", self.class_name);
         println!("Process Name: {}", self.process_name);
         println!("Process File: {}", self.process_file.display());
-        println!("Position: ({}, {}) Size: {}x{}", 
-            self.position.x, self.position.y, self.position.width, self.position.height);
+        println!(
+            "Position: ({}, {}) Size: {}x{}",
+            self.position.x, self.position.y, self.position.width, self.position.height
+        );
         println!("----------------------------------------");
     }
 
@@ -56,8 +58,10 @@ impl WindowInfo {
     /// window.print_compact();
     /// ```
     pub fn print_compact(&self) {
-        println!("[{}] 0x{:x} (PID: {}) @ ({},{}) - {}", 
-            self.index, self.hwnd, self.pid, self.position.x, self.position.y, self.title);
+        println!(
+            "[{}] 0x{:x} (PID: {}) @ ({},{}) - {}",
+            self.index, self.hwnd, self.pid, self.position.x, self.position.y, self.title
+        );
     }
 
     /// Checks if the window handle is still valid.
@@ -83,7 +87,7 @@ impl WindowInfo {
     pub fn is_valid(&self) -> bool {
         use windows::Win32::Foundation::*;
         use windows::Win32::UI::WindowsAndMessaging::*;
-        
+
         unsafe { IsWindow(HWND(self.hwnd)).as_bool() }
     }
 }
@@ -143,26 +147,46 @@ impl WindowSorter {
     }
 
     /// Compares two windows based on position sorting criteria.
-    fn compare_positions(a: &WindowInfo, b: &WindowInfo, position_sort: &PositionSort) -> std::cmp::Ordering {
+    fn compare_positions(
+        a: &WindowInfo,
+        b: &WindowInfo,
+        position_sort: &PositionSort,
+    ) -> std::cmp::Ordering {
         match position_sort {
             PositionSort::X(order) => {
                 let ordering = a.position.x.cmp(&b.position.x);
-                if *order < 0 { ordering.reverse() } else { ordering }
+                if *order < 0 {
+                    ordering.reverse()
+                } else {
+                    ordering
+                }
             }
             PositionSort::Y(order) => {
                 let ordering = a.position.y.cmp(&b.position.y);
-                if *order < 0 { ordering.reverse() } else { ordering }
+                if *order < 0 {
+                    ordering.reverse()
+                } else {
+                    ordering
+                }
             }
             PositionSort::XY(x_order, y_order) => {
                 // Sort by X first
                 let x_ordering = a.position.x.cmp(&b.position.x);
                 if x_ordering != std::cmp::Ordering::Equal {
-                    return if *x_order < 0 { x_ordering.reverse() } else { x_ordering };
+                    return if *x_order < 0 {
+                        x_ordering.reverse()
+                    } else {
+                        x_ordering
+                    };
                 }
-                
+
                 // If X is equal, sort by Y
                 let y_ordering = a.position.y.cmp(&b.position.y);
-                if *y_order < 0 { y_ordering.reverse() } else { y_ordering }
+                if *y_order < 0 {
+                    y_ordering.reverse()
+                } else {
+                    y_ordering
+                }
             }
         }
     }
@@ -181,14 +205,14 @@ impl WindowSorter {
     pub fn filter_and_sort_windows(
         windows: &[WindowInfo],
         criteria: &crate::types::FilterCriteria,
-        sort_criteria: &SortCriteria
+        sort_criteria: &SortCriteria,
     ) -> Vec<WindowInfo> {
         let mut filtered: Vec<WindowInfo> = windows
             .iter()
             .filter(|window| matches_criteria(window, criteria))
             .cloned()
             .collect();
-        
+
         Self::sort_windows(&mut filtered, sort_criteria);
         filtered
     }

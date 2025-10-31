@@ -1,4 +1,4 @@
-use crate::errors::{WindowError, Result};
+use crate::errors::{Result, WindowError};
 use crate::types::WindowInfo;
 
 #[cfg(feature = "selection")]
@@ -23,14 +23,14 @@ use crate::types::{PositionSort, SortCriteria};
 #[cfg(feature = "selection")]
 pub fn parse_selection(selection_str: &str) -> Result<Selection> {
     let selection_str = selection_str.trim().to_lowercase();
-    
+
     if selection_str == "all" {
         return Ok(Selection::All);
     }
 
     let mut indices = Vec::new();
     let parts: Vec<&str> = selection_str.split(',').collect();
-    
+
     for part in parts {
         let part = part.trim();
         if part.contains('-') {
@@ -39,7 +39,7 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
             if range_parts.len() == 2 {
                 let start = parse_index(range_parts[0].trim())?;
                 let end = parse_index(range_parts[1].trim())?;
-                
+
                 for i in start..=end {
                     indices.push(i);
                 }
@@ -52,11 +52,11 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
             indices.push(index);
         }
     }
-    
+
     // Remove duplicates and sort
     indices.sort();
     indices.dedup();
-    
+
     Ok(Selection::Indices(indices))
 }
 
@@ -76,7 +76,7 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
 #[cfg(feature = "sorting")]
 pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
     let sort_str = sort_str.trim().to_lowercase();
-    
+
     if sort_str.is_empty() {
         return Ok(None);
     }
@@ -120,7 +120,7 @@ fn parse_single_position_order(part: &str, expected_prefix: char) -> Result<i8> 
     match order_str {
         "1" => Ok(1),
         "-1" => Ok(-1),
-        _ => Err(WindowError::InvalidSortOrder)
+        _ => Err(WindowError::InvalidSortOrder),
     }
 }
 
@@ -149,24 +149,36 @@ pub fn matches_criteria(window: &WindowInfo, criteria: &crate::types::FilterCrit
 
     // Title filter (contains, case-insensitive)
     if let Some(ref title_filter) = criteria.title_contains {
-        if !title_filter.is_empty() && 
-           !window.title.to_lowercase().contains(&title_filter.to_lowercase()) {
+        if !title_filter.is_empty()
+            && !window
+                .title
+                .to_lowercase()
+                .contains(&title_filter.to_lowercase())
+        {
             return false;
         }
     }
 
     // Class name filter (contains, case-insensitive)
     if let Some(ref class_filter) = criteria.class_name_contains {
-        if !class_filter.is_empty() && 
-           !window.class_name.to_lowercase().contains(&class_filter.to_lowercase()) {
+        if !class_filter.is_empty()
+            && !window
+                .class_name
+                .to_lowercase()
+                .contains(&class_filter.to_lowercase())
+        {
             return false;
         }
     }
 
     // Process name filter (contains, case-insensitive)
     if let Some(ref process_filter) = criteria.process_name_contains {
-        if !process_filter.is_empty() && 
-           !window.process_name.to_lowercase().contains(&process_filter.to_lowercase()) {
+        if !process_filter.is_empty()
+            && !window
+                .process_name
+                .to_lowercase()
+                .contains(&process_filter.to_lowercase())
+        {
             return false;
         }
     }

@@ -75,11 +75,11 @@ pub enum Selection {
 #[derive(Debug, Clone)]
 pub enum PositionSort {
     /// Sort by X coordinate only.
-    X(i8),        // 1: ascending, -1: descending
+    X(i8), // 1: ascending, -1: descending
     /// Sort by Y coordinate only.
-    Y(i8),        // 1: ascending, -1: descending
+    Y(i8), // 1: ascending, -1: descending
     /// Sort by X coordinate first, then Y coordinate.
-    XY(i8, i8),   // (x_order, y_order)
+    XY(i8, i8), // (x_order, y_order)
 }
 
 #[cfg(feature = "sorting")]

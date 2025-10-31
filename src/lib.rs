@@ -39,17 +39,17 @@
 
 #![warn(missing_docs)]
 
-mod types;
 mod errors;
-mod utils;
 mod models;
+mod types;
+mod utils;
 
 #[cfg(feature = "windows")]
 mod enumerator;
 
-pub use types::*;
 pub use errors::*;
 pub use models::*;
+pub use types::*;
 
 #[cfg(feature = "windows")]
 pub use enumerator::*;

@@ -5,8 +5,8 @@ use windows::Win32::System::ProcessStatus::*;
 use windows::Win32::System::Threading::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
 
-use crate::types::{WindowInfo, WindowPosition, FilterCriteria};
-use crate::errors::{WindowError, Result};
+use crate::errors::{Result, WindowError};
+use crate::types::{FilterCriteria, WindowInfo, WindowPosition};
 use crate::utils;
 
 #[cfg(feature = "selection")]
@@ -42,7 +42,9 @@ impl WindowEnumerator {
     ///
     /// [`enumerate_all_windows`]: WindowEnumerator::enumerate_all_windows
     pub fn new() -> Self {
-        Self { windows: Vec::new() }
+        Self {
+            windows: Vec::new(),
+        }
     }
 
     /// Enumerates all visible windows on the system.
@@ -64,24 +66,27 @@ impl WindowEnumerator {
     /// ```
     pub fn enumerate_all_windows(&mut self) -> Result<()> {
         self.windows.clear();
-        
+
         unsafe {
-            EnumWindows(Some(Self::enum_windows_proc), LPARAM(self as *mut _ as isize))
-                .map_err(|e| Error::new(e.code(), "Failed to enumerate windows"))?;
+            EnumWindows(
+                Some(Self::enum_windows_proc),
+                LPARAM(self as *mut _ as isize),
+            )
+            .map_err(|e| Error::new(e.code(), "Failed to enumerate windows"))?;
         }
-        
+
         // Assign 1-based indices to each window
         for (index, window) in self.windows.iter_mut().enumerate() {
             window.index = index + 1;
         }
-        
+
         Ok(())
     }
 
     /// Windows enumeration callback function.
     unsafe extern "system" fn enum_windows_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
         let enumerator = &mut *(lparam.0 as *mut WindowEnumerator);
-        
+
         // Skip invisible windows and child windows
         if IsWindowVisible(hwnd).as_bool() && GetParent(hwnd).0 == 0 {
             if let Ok(mut window_info) = enumerator.get_window_info(hwnd) {
@@ -90,7 +95,7 @@ impl WindowEnumerator {
                 enumerator.windows.push(window_info);
             }
         }
-        
+
         BOOL::from(true) // Continue enumeration
     }
 
@@ -99,13 +104,13 @@ impl WindowEnumerator {
         unsafe {
             // Get window title
             let title = Self::get_window_text(hwnd);
-            
+
             // Get window class name
             let class_name = Self::get_class_name(hwnd);
-            
+
             // Get process ID
             let pid = Self::get_process_id(hwnd);
-            
+
             // Get process information
             let (process_name, process_file) = if pid > 0 {
                 Self::get_process_info(pid).unwrap_or_default()
@@ -179,19 +184,15 @@ impl WindowEnumerator {
 
     /// Retrieves process information for a given process ID.
     unsafe fn get_process_info(pid: u32) -> Result<(String, std::path::PathBuf)> {
-        let process_handle = OpenProcess(
-            PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-            false,
-            pid,
-        )?;
+        let process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid)?;
 
         let mut file_buffer = [0u16; MAX_PATH as usize];
         let len = GetProcessImageFileNameW(process_handle, &mut file_buffer);
-        
+
         if len > 0 {
             let full_path = std::ffi::OsString::from_wide(&file_buffer[..len as usize]);
             let path_buf = std::path::PathBuf::from(&full_path);
-            
+
             // Extract just the filename
             let process_name = path_buf
                 .file_name()
@@ -251,7 +252,11 @@ impl WindowEnumerator {
     ///
     /// A vector containing the filtered and sorted windows.
     #[cfg(feature = "sorting")]
-    pub fn filter_and_sort_windows(&self, criteria: &FilterCriteria, sort_criteria: &SortCriteria) -> Vec<WindowInfo> {
+    pub fn filter_and_sort_windows(
+        &self,
+        criteria: &FilterCriteria,
+        sort_criteria: &SortCriteria,
+    ) -> Vec<WindowInfo> {
         WindowSorter::filter_and_sort_windows(&self.windows, criteria, sort_criteria)
     }
 
@@ -268,17 +273,19 @@ impl WindowEnumerator {
     ///
     /// A vector containing the selected windows that match the filter criteria.
     #[cfg(feature = "selection")]
-    pub fn filter_windows_with_selection(&self, criteria: &FilterCriteria, selection: &Selection) -> Vec<WindowInfo> {
+    pub fn filter_windows_with_selection(
+        &self,
+        criteria: &FilterCriteria,
+        selection: &Selection,
+    ) -> Vec<WindowInfo> {
         let filtered = self.filter_windows(criteria);
-        
+
         match selection {
             Selection::All => filtered,
-            Selection::Indices(indices) => {
-                filtered
-                    .into_iter()
-                    .filter(|window| indices.contains(&window.index))
-                    .collect()
-            }
+            Selection::Indices(indices) => filtered
+                .into_iter()
+                .filter(|window| indices.contains(&window.index))
+                .collect(),
         }
     }
 
@@ -297,21 +304,20 @@ impl WindowEnumerator {
     /// A vector containing the filtered, sorted, and selected windows.
     #[cfg(all(feature = "sorting", feature = "selection"))]
     pub fn filter_sort_windows_with_selection(
-        &self, 
-        criteria: &FilterCriteria, 
+        &self,
+        criteria: &FilterCriteria,
         sort_criteria: &SortCriteria,
-        selection: &Selection
+        selection: &Selection,
     ) -> Vec<WindowInfo> {
-        let mut filtered = WindowSorter::filter_and_sort_windows(&self.windows, criteria, sort_criteria);
-        
+        let mut filtered =
+            WindowSorter::filter_and_sort_windows(&self.windows, criteria, sort_criteria);
+
         match selection {
             Selection::All => filtered,
-            Selection::Indices(indices) => {
-                filtered
-                    .into_iter()
-                    .filter(|window| indices.contains(&window.index))
-                    .collect()
-            }
+            Selection::Indices(indices) => filtered
+                .into_iter()
+                .filter(|window| indices.contains(&window.index))
+                .collect(),
         }
     }
 
@@ -355,13 +361,15 @@ impl WindowEnumerator {
         println!("Index | Handle      | PID    | Position    | Title");
         println!("------|-------------|--------|-------------|-------------------");
         for window in &self.windows {
-            println!("{:5} | 0x{:08x} | {:6} | {:4},{:4}     | {}", 
-                window.index, 
-                window.hwnd, 
+            println!(
+                "{:5} | 0x{:08x} | {:6} | {:4},{:4}     | {}",
+                window.index,
+                window.hwnd,
                 window.pid,
                 window.position.x,
                 window.position.y,
-                window.title);
+                window.title
+            );
         }
     }
 }
