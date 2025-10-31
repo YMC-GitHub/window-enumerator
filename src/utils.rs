@@ -11,7 +11,7 @@ use crate::types::PositionSort; // ← 只保留 PositionSort，删除 SortCrite
 ///
 /// # Examples
 /// ```
-/// use winspector::utils::parse_selection;
+/// use window_enumerator::parse_selection;
 ///
 /// let selection = parse_selection("1,2,3").unwrap();
 /// let all_selection = parse_selection("all").unwrap();
@@ -65,7 +65,7 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
 ///
 /// # Examples
 /// ```
-/// use winspector::utils::parse_position_sort;
+/// use window_enumerator::parse_position_sort;
 ///
 /// let x_sort = parse_position_sort("x1").unwrap();
 /// let y_sort = parse_position_sort("y-1").unwrap();

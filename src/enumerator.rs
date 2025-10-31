@@ -1,6 +1,6 @@
+use std::os::windows::ffi::OsStringExt;
 use windows::core::*;
 use windows::Win32::Foundation::*;
-use windows::Win32::System::Diagnostics::ToolHelp::*;
 use windows::Win32::System::ProcessStatus::*;
 use windows::Win32::System::Threading::*;
 use windows::Win32::UI::WindowsAndMessaging::*;
@@ -35,7 +35,7 @@ impl WindowEnumerator {
     /// # Examples
     ///
     /// ```
-    /// use winspector::WindowEnumerator;
+    /// use window_enumerator::WindowEnumerator;
     ///
     /// let enumerator = WindowEnumerator::new();
     /// ```
@@ -59,7 +59,7 @@ impl WindowEnumerator {
     /// # Examples
     ///
     /// ```no_run
-    /// use winspector::WindowEnumerator;
+    /// use window_enumerator::WindowEnumerator;
     ///
     /// let mut enumerator = WindowEnumerator::new();
     /// enumerator.enumerate_all_windows().unwrap();
@@ -72,7 +72,7 @@ impl WindowEnumerator {
                 Some(Self::enum_windows_proc),
                 LPARAM(self as *mut _ as isize),
             )
-            .map_err(|e| Error::new(e.code(), "Failed to enumerate windows"))?;
+            .map_err(|e| Error::new(e.code(), "Failed to enumerate windows".into()))?;
         }
 
         // Assign 1-based indices to each window
@@ -170,7 +170,7 @@ impl WindowEnumerator {
     /// Retrieves the position and dimensions of a window.
     unsafe fn get_window_position(hwnd: HWND) -> WindowPosition {
         let mut rect = RECT::default();
-        if GetWindowRect(hwnd, &mut rect).as_bool() {
+        if GetWindowRect(hwnd, &mut rect).is_ok() {
             WindowPosition {
                 x: rect.left,
                 y: rect.top,
@@ -203,8 +203,45 @@ impl WindowEnumerator {
             Ok((process_name, path_buf))
         } else {
             CloseHandle(process_handle).ok();
-            Err(WindowError::WindowsApiError(GetLastError().0))
+            // 使用标准库的方法获取错误代码
+            let last_error = std::io::Error::last_os_error();
+            Err(WindowError::WindowsApiError(
+                last_error.raw_os_error().unwrap_or(0) as u32,
+            ))
         }
+    }
+
+    /// Finds windows by title containing the specified string (case-insensitive).
+    ///
+    /// This is a convenience method for simple title-based filtering.
+    ///
+    /// # Arguments
+    ///
+    /// * `title_substring` - The substring to search for in window titles
+    ///
+    /// # Returns
+    ///
+    /// A vector containing windows whose titles contain the specified substring.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use window_enumerator::WindowEnumerator;
+    ///
+    /// let mut enumerator = WindowEnumerator::new();
+    /// enumerator.enumerate_all_windows().unwrap();
+    ///
+    /// let chrome_windows = enumerator.find_by_title("Chrome");
+    /// for window in chrome_windows {
+    ///     window.print_compact();
+    /// }
+    /// ```
+    pub fn find_by_title(&self, title_substring: &str) -> Vec<WindowInfo> {
+        let criteria = FilterCriteria {
+            title_contains: Some(title_substring.to_string()),
+            ..Default::default()
+        };
+        self.filter_windows(&criteria)
     }
 
     /// Filters windows based on the specified criteria.
@@ -220,7 +257,7 @@ impl WindowEnumerator {
     /// # Examples
     ///
     /// ```no_run
-    /// use winspector::{WindowEnumerator, FilterCriteria};
+    /// use window_enumerator::{WindowEnumerator, FilterCriteria};
     ///
     /// let mut enumerator = WindowEnumerator::new();
     /// enumerator.enumerate_all_windows().unwrap();
@@ -309,7 +346,7 @@ impl WindowEnumerator {
         sort_criteria: &SortCriteria,
         selection: &Selection,
     ) -> Vec<WindowInfo> {
-        let mut filtered =
+        let filtered =
             WindowSorter::filter_and_sort_windows(&self.windows, criteria, sort_criteria);
 
         match selection {
@@ -351,7 +388,7 @@ impl WindowEnumerator {
     /// # Examples
     ///
     /// ```no_run
-    /// use winspector::WindowEnumerator;
+    /// use window_enumerator::WindowEnumerator;
     ///
     /// let mut enumerator = WindowEnumerator::new();
     /// enumerator.enumerate_all_windows().unwrap();

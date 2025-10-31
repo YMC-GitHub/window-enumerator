@@ -12,7 +12,8 @@ impl WindowInfo {
     ///
     /// # Examples
     /// ```
-    /// # use winspector::WindowInfo;
+    /// # use window_enumerator::WindowInfo;
+    /// # use window_enumerator::WindowPosition;
     /// # let window = WindowInfo {
     /// #     hwnd: 12345,
     /// #     pid: 1234,
@@ -21,7 +22,7 @@ impl WindowInfo {
     /// #     process_name: "test.exe".to_string(),
     /// #     process_file: std::path::PathBuf::from("test.exe"),
     /// #     index: 1,
-    /// #     position: winspector::WindowPosition::default(),
+    /// #     position: WindowPosition::default(),
     /// # };
     /// window.print();
     /// ```
@@ -44,7 +45,8 @@ impl WindowInfo {
     ///
     /// # Examples
     /// ```
-    /// # use winspector::WindowInfo;
+    /// # use window_enumerator::WindowInfo;
+    /// # use window_enumerator::WindowPosition;
     /// # let window = WindowInfo {
     /// #     hwnd: 12345,
     /// #     pid: 1234,
@@ -53,7 +55,7 @@ impl WindowInfo {
     /// #     process_name: "test.exe".to_string(),
     /// #     process_file: std::path::PathBuf::from("test.exe"),
     /// #     index: 1,
-    /// #     position: winspector::WindowPosition::default(),
+    /// #     position: WindowPosition::default(),
     /// # };
     /// window.print_compact();
     /// ```
@@ -70,7 +72,8 @@ impl WindowInfo {
     ///
     /// # Examples
     /// ```
-    /// # use winspector::WindowInfo;
+    /// # use window_enumerator::WindowInfo;
+    /// # use window_enumerator::WindowPosition;
     /// # let window = WindowInfo {
     /// #     hwnd: 12345,
     /// #     pid: 1234,
@@ -79,7 +82,7 @@ impl WindowInfo {
     /// #     process_name: "test.exe".to_string(),
     /// #     process_file: std::path::PathBuf::from("test.exe"),
     /// #     index: 1,
-    /// #     position: winspector::WindowPosition::default(),
+    /// #     position: WindowPosition::default(),
     /// # };
     /// let is_valid = window.is_valid();
     /// ```

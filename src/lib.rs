@@ -18,8 +18,12 @@
 //! let mut enumerator = WindowEnumerator::new();
 //! enumerator.enumerate_all_windows().unwrap();
 //!
-//! // Find Chrome windows
-//! let chrome_windows = enumerator.find_by_title("Chrome");
+//! // Find Chrome windows using filter
+//! let criteria = FilterCriteria {
+//!     title_contains: Some("Chrome".to_string()),
+//!     ..Default::default()
+//! };
+//! let chrome_windows = enumerator.filter_windows(&criteria);
 //! for window in chrome_windows {
 //!     window.print_compact();
 //! }
@@ -50,6 +54,13 @@ mod enumerator;
 pub use errors::*;
 pub use models::*;
 pub use types::*;
+
+// 公开导出工具函数
+#[cfg(feature = "selection")]
+pub use utils::parse_selection;
+
+#[cfg(feature = "sorting")]
+pub use utils::parse_position_sort;
 
 #[cfg(feature = "windows")]
 pub use enumerator::*;
