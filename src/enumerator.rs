@@ -18,17 +18,50 @@ use crate::types::SortCriteria;
 #[cfg(feature = "sorting")]
 use crate::models::WindowSorter;
 
-/// 窗口枚举器
+/// The main window enumeration and inspection interface.
+///
+/// This struct provides methods to discover, filter, and sort Windows windows
+/// with various criteria. It serves as the primary entry point for the library.
 pub struct WindowEnumerator {
     windows: Vec<WindowInfo>,
 }
 
 impl WindowEnumerator {
+    /// Creates a new window enumerator.
+    ///
+    /// The enumerator starts with no windows loaded. Call [`enumerate_all_windows`]
+    /// to populate it with the current system windows.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use winspector::WindowEnumerator;
+    ///
+    /// let enumerator = WindowEnumerator::new();
+    /// ```
+    ///
+    /// [`enumerate_all_windows`]: WindowEnumerator::enumerate_all_windows
     pub fn new() -> Self {
         Self { windows: Vec::new() }
     }
 
-    /// 枚举所有可见窗口
+    /// Enumerates all visible windows on the system.
+    ///
+    /// This method populates the internal window list with all currently
+    /// visible, non-child windows. Each window is assigned a 1-based index.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`WindowError::WindowsApiError`] if the Windows API call fails.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use winspector::WindowEnumerator;
+    ///
+    /// let mut enumerator = WindowEnumerator::new();
+    /// enumerator.enumerate_all_windows().unwrap();
+    /// ```
     pub fn enumerate_all_windows(&mut self) -> Result<()> {
         self.windows.clear();
         
@@ -37,7 +70,7 @@ impl WindowEnumerator {
                 .map_err(|e| Error::new(e.code(), "Failed to enumerate windows"))?;
         }
         
-        // 为每个窗口分配索引（从1开始）
+        // Assign 1-based indices to each window
         for (index, window) in self.windows.iter_mut().enumerate() {
             window.index = index + 1;
         }
@@ -45,40 +78,42 @@ impl WindowEnumerator {
         Ok(())
     }
 
+    /// Windows enumeration callback function.
     unsafe extern "system" fn enum_windows_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
         let enumerator = &mut *(lparam.0 as *mut WindowEnumerator);
         
-        // 跳过不可见窗口和子窗口
+        // Skip invisible windows and child windows
         if IsWindowVisible(hwnd).as_bool() && GetParent(hwnd).0 == 0 {
             if let Ok(mut window_info) = enumerator.get_window_info(hwnd) {
-                // 临时索引，后续会重新分配
+                // Temporary index, will be reassigned later
                 window_info.index = enumerator.windows.len() + 1;
                 enumerator.windows.push(window_info);
             }
         }
         
-        BOOL::from(true) // 继续枚举
+        BOOL::from(true) // Continue enumeration
     }
 
+    /// Gathers information about a specific window.
     fn get_window_info(&self, hwnd: HWND) -> Result<WindowInfo> {
         unsafe {
-            // 获取窗口标题
+            // Get window title
             let title = Self::get_window_text(hwnd);
             
-            // 获取窗口类名
+            // Get window class name
             let class_name = Self::get_class_name(hwnd);
             
-            // 获取进程ID
+            // Get process ID
             let pid = Self::get_process_id(hwnd);
             
-            // 获取进程信息
+            // Get process information
             let (process_name, process_file) = if pid > 0 {
                 Self::get_process_info(pid).unwrap_or_default()
             } else {
                 (String::new(), std::path::PathBuf::new())
             };
 
-            // 获取窗口位置和大小
+            // Get window position and size
             let position = Self::get_window_position(hwnd);
 
             Ok(WindowInfo {
@@ -89,11 +124,12 @@ impl WindowEnumerator {
                 process_name,
                 process_file,
                 position,
-                index: 0, // 临时值，后续会设置
+                index: 0, // Temporary value, will be set later
             })
         }
     }
 
+    /// Retrieves the text of a window.
     unsafe fn get_window_text(hwnd: HWND) -> String {
         let mut buffer = [0u16; 256];
         let len = GetWindowTextW(hwnd, &mut buffer);
@@ -106,6 +142,7 @@ impl WindowEnumerator {
         }
     }
 
+    /// Retrieves the class name of a window.
     unsafe fn get_class_name(hwnd: HWND) -> String {
         let mut buffer = [0u16; 256];
         let len = GetClassNameW(hwnd, &mut buffer);
@@ -118,12 +155,14 @@ impl WindowEnumerator {
         }
     }
 
+    /// Retrieves the process ID of a window.
     unsafe fn get_process_id(hwnd: HWND) -> u32 {
         let mut pid: u32 = 0;
         GetWindowThreadProcessId(hwnd, Some(&mut pid));
         pid
     }
 
+    /// Retrieves the position and dimensions of a window.
     unsafe fn get_window_position(hwnd: HWND) -> WindowPosition {
         let mut rect = RECT::default();
         if GetWindowRect(hwnd, &mut rect).as_bool() {
@@ -138,6 +177,7 @@ impl WindowEnumerator {
         }
     }
 
+    /// Retrieves process information for a given process ID.
     unsafe fn get_process_info(pid: u32) -> Result<(String, std::path::PathBuf)> {
         let process_handle = OpenProcess(
             PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -152,7 +192,7 @@ impl WindowEnumerator {
             let full_path = std::ffi::OsString::from_wide(&file_buffer[..len as usize]);
             let path_buf = std::path::PathBuf::from(&full_path);
             
-            // 提取文件名
+            // Extract just the filename
             let process_name = path_buf
                 .file_name()
                 .map(|name| name.to_string_lossy().into_owned())
@@ -166,7 +206,30 @@ impl WindowEnumerator {
         }
     }
 
-    /// 根据条件过滤窗口
+    /// Filters windows based on the specified criteria.
+    ///
+    /// # Arguments
+    ///
+    /// * `criteria` - The filter criteria to apply
+    ///
+    /// # Returns
+    ///
+    /// A vector containing only the windows that match all criteria.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use winspector::{WindowEnumerator, FilterCriteria};
+    ///
+    /// let mut enumerator = WindowEnumerator::new();
+    /// enumerator.enumerate_all_windows().unwrap();
+    ///
+    /// let criteria = FilterCriteria {
+    ///     title_contains: Some("Chrome".to_string()),
+    ///     ..Default::default()
+    /// };
+    /// let chrome_windows = enumerator.filter_windows(&criteria);
+    /// ```
     pub fn filter_windows(&self, criteria: &FilterCriteria) -> Vec<WindowInfo> {
         self.windows
             .iter()
@@ -175,13 +238,35 @@ impl WindowEnumerator {
             .collect()
     }
 
-    /// 过滤并排序窗口
+    /// Filters and sorts windows based on the specified criteria.
+    ///
+    /// Requires the `sorting` feature.
+    ///
+    /// # Arguments
+    ///
+    /// * `criteria` - The filter criteria to apply
+    /// * `sort_criteria` - The sort criteria to apply
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the filtered and sorted windows.
     #[cfg(feature = "sorting")]
     pub fn filter_and_sort_windows(&self, criteria: &FilterCriteria, sort_criteria: &SortCriteria) -> Vec<WindowInfo> {
         WindowSorter::filter_and_sort_windows(&self.windows, criteria, sort_criteria)
     }
 
-    /// 带选择的过滤窗口
+    /// Filters windows with selection criteria.
+    ///
+    /// Requires the `selection` feature.
+    ///
+    /// # Arguments
+    ///
+    /// * `criteria` - The filter criteria to apply
+    /// * `selection` - The selection criteria to apply
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the selected windows that match the filter criteria.
     #[cfg(feature = "selection")]
     pub fn filter_windows_with_selection(&self, criteria: &FilterCriteria, selection: &Selection) -> Vec<WindowInfo> {
         let filtered = self.filter_windows(criteria);
@@ -197,7 +282,19 @@ impl WindowEnumerator {
         }
     }
 
-    /// 带选择和排序的过滤窗口
+    /// Filters, sorts, and selects windows based on the specified criteria.
+    ///
+    /// Requires both `sorting` and `selection` features.
+    ///
+    /// # Arguments
+    ///
+    /// * `criteria` - The filter criteria to apply
+    /// * `sort_criteria` - The sort criteria to apply
+    /// * `selection` - The selection criteria to apply
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the filtered, sorted, and selected windows.
     #[cfg(all(feature = "sorting", feature = "selection"))]
     pub fn filter_sort_windows_with_selection(
         &self, 
@@ -218,17 +315,42 @@ impl WindowEnumerator {
         }
     }
 
-    /// 获取所有枚举的窗口
+    /// Returns a reference to all enumerated windows.
+    ///
+    /// # Returns
+    ///
+    /// A slice containing all windows that were enumerated.
     pub fn get_windows(&self) -> &[WindowInfo] {
         &self.windows
     }
 
-    /// 按索引获取窗口（1-based）
+    /// Retrieves a window by its 1-based index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The 1-based index of the window to retrieve
+    ///
+    /// # Returns
+    ///
+    /// `Some(&WindowInfo)` if a window with the given index exists, `None` otherwise.
     pub fn get_window_by_index(&self, index: usize) -> Option<&WindowInfo> {
         self.windows.iter().find(|w| w.index == index)
     }
 
-    /// 打印带索引的所有窗口
+    /// Prints all enumerated windows with their indices in a formatted table.
+    ///
+    /// This is useful for debugging and for users to see available windows
+    /// before making selections.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use winspector::WindowEnumerator;
+    ///
+    /// let mut enumerator = WindowEnumerator::new();
+    /// enumerator.enumerate_all_windows().unwrap();
+    /// enumerator.print_windows_with_indices();
+    /// ```
     pub fn print_windows_with_indices(&self) {
         println!("Index | Handle      | PID    | Position    | Title");
         println!("------|-------------|--------|-------------|-------------------");

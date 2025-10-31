@@ -1,13 +1,37 @@
 use std::fmt;
 
+/// Errors that can occur during window enumeration and inspection operations.
 #[derive(Debug)]
 pub enum WindowError {
+    /// The selection string format is invalid.
+    ///
+    /// Valid formats are: "all", "1,2,3", "1-3"
     InvalidSelectionFormat,
+    
+    /// The position sort string format is invalid.
+    ///
+    /// Valid formats are: "x1", "y-1", "x1|y1"
     InvalidPositionSortFormat,
+    
+    /// The range format is invalid.
+    ///
+    /// Valid range format is: "start-end" where start <= end
     InvalidRange,
+    
+    /// The index cannot be parsed as a valid usize.
     InvalidIndex,
+    
+    /// The sort order is invalid.
+    ///
+    /// Valid orders are: 1 (ascending) or -1 (descending)
     InvalidSortOrder,
+    
+    /// A Windows API call failed.
+    ///
+    /// Contains the Windows error code.
     WindowsApiError(u32),
+    
+    /// Other unspecified errors.
     Other(String),
 }
 
@@ -34,4 +58,5 @@ impl fmt::Display for WindowError {
 
 impl std::error::Error for WindowError {}
 
+/// A specialized [`Result`] type for window operations.
 pub type Result<T> = std::result::Result<T, WindowError>;

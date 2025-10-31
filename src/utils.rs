@@ -7,7 +7,19 @@ use crate::types::Selection;
 #[cfg(feature = "sorting")]
 use crate::types::{PositionSort, SortCriteria};
 
-/// 解析选择字符串
+/// Parses a selection string into a [`Selection`] enum.
+///
+/// # Examples
+/// ```
+/// use winspector::utils::parse_selection;
+///
+/// let selection = parse_selection("1,2,3").unwrap();
+/// let all_selection = parse_selection("all").unwrap();
+/// let range_selection = parse_selection("1-3").unwrap();
+/// ```
+///
+/// # Errors
+/// Returns [`WindowError::InvalidSelectionFormat`] if the string cannot be parsed.
 #[cfg(feature = "selection")]
 pub fn parse_selection(selection_str: &str) -> Result<Selection> {
     let selection_str = selection_str.trim().to_lowercase();
@@ -22,7 +34,7 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
     for part in parts {
         let part = part.trim();
         if part.contains('-') {
-            // 处理范围，如 "1-3"
+            // Handle ranges like "1-3"
             let range_parts: Vec<&str> = part.split('-').collect();
             if range_parts.len() == 2 {
                 let start = parse_index(range_parts[0].trim())?;
@@ -35,20 +47,32 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
                 return Err(WindowError::InvalidRange);
             }
         } else {
-            // 处理单个索引
+            // Handle single indices
             let index = parse_index(part)?;
             indices.push(index);
         }
     }
     
-    // 去重并排序
+    // Remove duplicates and sort
     indices.sort();
     indices.dedup();
     
     Ok(Selection::Indices(indices))
 }
 
-/// 解析位置排序字符串
+/// Parses a position sort string into a [`PositionSort`] enum.
+///
+/// # Examples
+/// ```
+/// use winspector::utils::parse_position_sort;
+///
+/// let x_sort = parse_position_sort("x1").unwrap();
+/// let y_sort = parse_position_sort("y-1").unwrap();
+/// let xy_sort = parse_position_sort("x1|y1").unwrap();
+/// ```
+///
+/// # Errors
+/// Returns [`WindowError::InvalidPositionSortFormat`] if the string cannot be parsed.
 #[cfg(feature = "sorting")]
 pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
     let sort_str = sort_str.trim().to_lowercase();
@@ -58,7 +82,7 @@ pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
     }
 
     if sort_str.contains('|') {
-        // 处理 "x1|y1" 格式
+        // Handle "x1|y1" format
         let parts: Vec<&str> = sort_str.split('|').collect();
         if parts.len() != 2 {
             return Err(WindowError::InvalidPositionSortFormat);
@@ -72,7 +96,7 @@ pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
 
         Ok(Some(PositionSort::XY(x_order, y_order)))
     } else {
-        // 处理单个坐标排序
+        // Handle single coordinate sorts
         if sort_str.starts_with('x') {
             let order = parse_single_position_order(&sort_str, 'x')?;
             Ok(Some(PositionSort::X(order)))
@@ -85,7 +109,7 @@ pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
     }
 }
 
-/// 解析单个位置排序顺序
+/// Parses a single position sort order (e.g., "x1" -> 1).
 #[cfg(feature = "sorting")]
 fn parse_single_position_order(part: &str, expected_prefix: char) -> Result<i8> {
     if part.len() < 2 || !part.starts_with(expected_prefix) {
@@ -100,12 +124,21 @@ fn parse_single_position_order(part: &str, expected_prefix: char) -> Result<i8> 
     }
 }
 
-/// 解析索引
+/// Parses a string into a usize index.
 fn parse_index(s: &str) -> Result<usize> {
     s.parse().map_err(|_| WindowError::InvalidIndex)
 }
 
-/// 检查窗口是否匹配过滤条件
+/// Checks if a window matches the given filter criteria.
+///
+/// # Arguments
+///
+/// * `window` - The window to check
+/// * `criteria` - The filter criteria to match against
+///
+/// # Returns
+///
+/// `true` if the window matches all criteria, `false` otherwise.
 pub fn matches_criteria(window: &WindowInfo, criteria: &crate::types::FilterCriteria) -> bool {
     // PID filter (exact match)
     if let Some(pid) = criteria.pid {
