@@ -11,8 +11,9 @@
 **/*.zip
 
 !.dockerignore
-!Cargo.toml
-!Cargo.lock
+# !Cargo.toml
+Cargo.lock
+.cargo
 !src/
 
 /dist
