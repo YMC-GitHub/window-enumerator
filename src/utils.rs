@@ -5,7 +5,7 @@ use crate::types::WindowInfo;
 use crate::types::Selection;
 
 #[cfg(feature = "sorting")]
-use crate::types::{PositionSort, SortCriteria};
+use crate::types::PositionSort; // ← 只保留 PositionSort，删除 SortCriteria
 
 /// Parses a selection string into a [`Selection`] enum.
 ///
@@ -21,6 +21,7 @@ use crate::types::{PositionSort, SortCriteria};
 /// # Errors
 /// Returns [`WindowError::InvalidSelectionFormat`] if the string cannot be parsed.
 #[cfg(feature = "selection")]
+#[allow(dead_code)] // ← 添加这个属性，因为函数可能被库用户使用
 pub fn parse_selection(selection_str: &str) -> Result<Selection> {
     let selection_str = selection_str.trim().to_lowercase();
 
@@ -74,6 +75,7 @@ pub fn parse_selection(selection_str: &str) -> Result<Selection> {
 /// # Errors
 /// Returns [`WindowError::InvalidPositionSortFormat`] if the string cannot be parsed.
 #[cfg(feature = "sorting")]
+#[allow(dead_code)] // ← 添加这个属性，因为函数可能被库用户使用
 pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
     let sort_str = sort_str.trim().to_lowercase();
 
@@ -111,6 +113,7 @@ pub fn parse_position_sort(sort_str: &str) -> Result<Option<PositionSort>> {
 
 /// Parses a single position sort order (e.g., "x1" -> 1).
 #[cfg(feature = "sorting")]
+#[allow(dead_code)] // ← 添加这个属性，因为函数可能被库用户使用
 fn parse_single_position_order(part: &str, expected_prefix: char) -> Result<i8> {
     if part.len() < 2 || !part.starts_with(expected_prefix) {
         return Err(WindowError::InvalidPositionSortFormat);
@@ -125,6 +128,7 @@ fn parse_single_position_order(part: &str, expected_prefix: char) -> Result<i8> 
 }
 
 /// Parses a string into a usize index.
+#[allow(dead_code)] // ← 添加这个属性，因为函数可能被库用户使用
 fn parse_index(s: &str) -> Result<usize> {
     s.parse().map_err(|_| WindowError::InvalidIndex)
 }

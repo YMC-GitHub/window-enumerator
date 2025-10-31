@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 /// Represents a window's position and dimensions on the screen.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)] // ← 添加 Default derive
 pub struct WindowPosition {
     /// The x-coordinate of the window's top-left corner in screen coordinates.
     pub x: i32,
@@ -13,16 +13,7 @@ pub struct WindowPosition {
     pub height: i32,
 }
 
-impl Default for WindowPosition {
-    fn default() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0,
-        }
-    }
-}
+// 删除手动实现的 Default for WindowPosition
 
 /// Comprehensive information about a Windows window.
 #[derive(Debug, Clone)]
@@ -84,7 +75,7 @@ pub enum PositionSort {
 
 #[cfg(feature = "sorting")]
 /// Criteria for sorting window enumeration results.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)] // ← 添加 Default derive
 pub struct SortCriteria {
     /// Sort by process ID (1: ascending, -1: descending, 0: no sorting).
     pub pid: i8,
@@ -94,13 +85,4 @@ pub struct SortCriteria {
     pub position: Option<PositionSort>,
 }
 
-#[cfg(feature = "sorting")]
-impl Default for SortCriteria {
-    fn default() -> Self {
-        Self {
-            pid: 0,
-            title: 0,
-            position: None,
-        }
-    }
-}
+// 删除手动实现的 Default for SortCriteria

@@ -104,7 +104,8 @@ impl WindowSorter {
     ///
     /// * `windows` - The windows to sort (modified in-place)
     /// * `sort_criteria` - The criteria to use for sorting
-    pub fn sort_windows(windows: &mut Vec<WindowInfo>, sort_criteria: &SortCriteria) {
+    pub fn sort_windows(windows: &mut [WindowInfo], sort_criteria: &SortCriteria) {
+        // ← 修改参数类型为切片
         if sort_criteria.pid == 0 && sort_criteria.title == 0 && sort_criteria.position.is_none() {
             return; // No sorting criteria
         }
