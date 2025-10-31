@@ -201,3 +201,21 @@ docker build --target runtime --build-arg USE_CHINA_MIRROR=true -t pass-craft:sc
 # docker run --rm --entrypoint="" pass-craft:window-gnu ls 
 # docker run --rm --entrypoint="" pass-craft:window-gnu tail -f /dev/null
 ```
+
+## 变更日志
+```
+# 生成完整的变更日志（包括未发布更改）
+./scripts/generate-changelog.sh --unreleased
+
+# 只生成已发布版本的变更日志
+./scripts/generate-changelog.sh
+
+# 生成特定版本的变更日志
+./scripts/generate-changelog.sh --version v0.4.0
+
+# 干运行（只显示不写入文件）
+./scripts/generate-changelog.sh --dry-run
+
+# 指定其他仓库路径
+./scripts/generate-changelog.sh --repo /path/to/other/repo --unreleased
+```
