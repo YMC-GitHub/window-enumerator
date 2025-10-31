@@ -1,0 +1,26 @@
+[package]
+name = "window-enumerator"
+version = "0.4.0"
+edition = "2021"
+description = "A Rust library for enumerating and filtering windows with multiple criteria including sorting and selection"
+authors = ["YeMiancheng <ymc.github@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/ymc-github/window-enumerator"
+keywords = ["windows", "enumeration", "process", "filter", "sort", "index"]
+categories = ["api-bindings", "system"]
+
+[features]
+default = ["sorting", "selection"]
+sorting = []
+selection = []
+
+[dependencies.windows]
+version = "0.52"
+features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Threading",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Diagnostics_ToolHelp",
+]
+optional = true
