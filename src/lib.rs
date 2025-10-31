@@ -38,6 +38,7 @@
 //!
 //! # Cargo Features
 //!
+//! - `windows`: Enables Windows API functionality (enabled by default)
 //! - `sorting`: Enables window sorting capabilities
 //! - `selection`: Enables window selection by indices
 

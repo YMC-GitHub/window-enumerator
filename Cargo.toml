@@ -10,7 +10,8 @@ keywords = ["windows", "enumeration", "process", "filter", "sort", "index"]
 categories = ["api-bindings", "system"]
 
 [features]
-default = ["sorting", "selection"]
+default = ["windows", "sorting", "selection"]
+windows = ["dep:windows"]
 sorting = []
 selection = []
 

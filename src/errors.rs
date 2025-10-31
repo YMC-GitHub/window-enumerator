@@ -60,7 +60,8 @@ impl fmt::Display for WindowError {
 
 impl std::error::Error for WindowError {}
 
-// 添加 From 转换实现
+// 只在启用 windows 特性时提供 From 转换实现
+#[cfg(feature = "windows")]
 impl From<windows::core::Error> for WindowError {
     fn from(error: windows::core::Error) -> Self {
         WindowError::WindowsApiError(error.code().0 as u32) // ← 添加类型转换
