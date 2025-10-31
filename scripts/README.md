@@ -218,4 +218,35 @@ docker build --target runtime --build-arg USE_CHINA_MIRROR=true -t pass-craft:sc
 
 # 指定其他仓库路径
 ./scripts/generate-changelog.sh --repo /path/to/other/repo --unreleased
+
+
+# 只包含功能、修复和文档
+./scripts/generate-changelog.sh --include feat,fix,docs
+
+# 只包含功能
+./scripts/generate-changelog.sh --include feat
+
+# 排除杂项和测试
+./scripts/generate-changelog.sh --exclude chore,test
+
+# 排除构建和CI
+./scripts/generate-changelog.sh --exclude build,ci
+
+# 排除样式修改
+./scripts/generate-changelog.sh --exclude style
+
+# 只包含功能和重构
+./scripts/generate-changelog.sh --include feat,refactor
+
+# 只生成重要变更（功能、修复、破坏性变更）
+./scripts/generate-changelog.sh --include feat,fix
+
+# 生成发布版本，排除杂项
+./scripts/generate-changelog.sh --version v1.0.0 --exclude chore,test,build,ci
+
+# 生成开发版变更日志，只关注功能
+./scripts/generate-changelog.sh --unreleased --include feat
+
+# 完整过滤并自动提交
+./scripts/generate-changelog.sh --include feat,fix,docs --commit --message "chore: update production changelog"
 ```

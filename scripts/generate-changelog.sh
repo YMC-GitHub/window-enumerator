@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pure shell CHANGELOG generator
+# Pure shell CHANGELOG generator with type filtering
 # Supports Conventional Commits and Keep a Changelog format
 
 set -e
@@ -19,6 +19,8 @@ TARGET_VERSION=""
 DRY_RUN=false
 AUTO_COMMIT=false
 COMMIT_MESSAGE="docs: update changelog"
+INCLUDE_TYPES=""
+EXCLUDE_TYPES=""
 
 # 提交类型映射
 declare -A TYPE_MAP=(
@@ -34,8 +36,8 @@ declare -A TYPE_MAP=(
     ["chore"]="Chores"
 )
 
-# 忽略的提交类型
-IGNORE_TYPES="chore test build ci"
+# 默认忽略的提交类型
+DEFAULT_IGNORE_TYPES="chore test build ci"
 
 # 打印帮助信息
 print_help() {
@@ -51,6 +53,8 @@ OPTIONS:
     -n, --dry-run         Dry run, don't write to file
     -c, --commit          Auto-commit changes after generation
     -m, --message TEXT    Custom commit message (default: "docs: update changelog")
+    -i, --include TYPES   Only include specified commit types (comma-separated)
+    -e, --exclude TYPES   Exclude specified commit types (comma-separated)
     -h, --help            Show this help message
 
 EXAMPLES:
@@ -58,8 +62,12 @@ EXAMPLES:
     $0 --version v1.0.0                # Generate for specific version
     $0 --dry-run                       # Show what would be generated
     $0 --commit                        # Generate and auto-commit
-    $0 --commit --message "chore: update changelog"
-    $0 --repo /path/to/repo
+    $0 --include feat,fix,docs         # Only include features, fixes, and docs
+    $0 --exclude chore,test            # Exclude chores and tests
+    $0 --include feat --exclude chore  # Only features, excluding chores
+
+VALID TYPES:
+    feat, fix, docs, style, refactor, perf, test, build, ci, chore
 
 CONVENTIONAL COMMITS:
     Format: type(scope): description
@@ -101,6 +109,60 @@ run_git() {
     git -C "$REPO_PATH" "$@"
 }
 
+# 验证类型
+validate_types() {
+    local types="$1"
+    local valid_types="feat fix docs style refactor perf test build ci chore"
+    
+    for type in $(echo "$types" | tr ',' ' '); do
+        if ! echo "$valid_types" | grep -qw "$type"; then
+            log_error "Invalid commit type: $type"
+            log_error "Valid types are: $valid_types"
+            exit 1
+        fi
+    done
+}
+
+# 检查是否应该包含提交类型
+should_include_type() {
+    local commit_type="$1"
+    local breaking="$2"
+    
+    # 如果是破坏性变更，总是包含
+    if [ "$breaking" = "true" ]; then
+        return 0
+    fi
+    
+    # 如果指定了包含类型，检查是否在包含列表中
+    if [ -n "$INCLUDE_TYPES" ]; then
+        for include_type in $(echo "$INCLUDE_TYPES" | tr ',' ' '); do
+            if [ "$commit_type" = "$include_type" ]; then
+                return 0
+            fi
+        done
+        return 1
+    fi
+    
+    # 如果指定了排除类型，检查是否在排除列表中
+    if [ -n "$EXCLUDE_TYPES" ]; then
+        for exclude_type in $(echo "$EXCLUDE_TYPES" | tr ',' ' '); do
+            if [ "$commit_type" = "$exclude_type" ]; then
+                return 1
+            fi
+        done
+        return 0
+    fi
+    
+    # 默认行为：使用默认忽略列表
+    for ignore_type in $DEFAULT_IGNORE_TYPES; do
+        if [ "$commit_type" = "$ignore_type" ]; then
+            return 1
+        fi
+    done
+    
+    return 0
+}
+
 # 获取所有标签
 get_tags() {
     run_git tag --sort=-creatordate
@@ -122,26 +184,6 @@ get_commits_between() {
     else
         run_git log --reverse --pretty=format:"%H|%s|%b|%ai|%an" "${start_ref}..${end_ref}"
     fi
-}
-
-# 检查是否应该忽略提交类型
-should_ignore_type() {
-    local commit_type="$1"
-    local breaking="$2"
-    
-    # 如果是破坏性变更，不忽略
-    if [ "$breaking" = "true" ]; then
-        return 1
-    fi
-    
-    # 检查是否在忽略列表中
-    for ignore_type in $IGNORE_TYPES; do
-        if [ "$commit_type" = "$ignore_type" ]; then
-            return 0
-        fi
-    done
-    
-    return 1
 }
 
 # 解析提交消息
@@ -194,8 +236,8 @@ categorize_commits() {
         parsed=$(parse_commit_message "$subject" "$body" "$hash" "$author")
         IFS='|' read -r commit_type scope description breaking hash_short author_name <<< "$parsed"
         
-        # 检查是否应该忽略
-        if should_ignore_type "$commit_type" "$breaking"; then
+        # 检查是否应该包含
+        if ! should_include_type "$commit_type" "$breaking"; then
             continue
         fi
         
@@ -357,6 +399,13 @@ generate_changelog() {
     changelog+="The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),"$'\n'
     changelog+="and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."$'\n\n'
     
+    # 显示过滤信息
+    if [ -n "$INCLUDE_TYPES" ]; then
+        changelog+="> **Filter**: Only including types: $INCLUDE_TYPES"$'\n\n'
+    elif [ -n "$EXCLUDE_TYPES" ]; then
+        changelog+="> **Filter**: Excluding types: $EXCLUDE_TYPES"$'\n\n'
+    fi
+    
     # 获取标签
     local tags=()
     while IFS= read -r tag; do
@@ -443,6 +492,16 @@ main() {
                 COMMIT_MESSAGE="$2"
                 shift 2
                 ;;
+            -i|--include)
+                INCLUDE_TYPES="$2"
+                validate_types "$INCLUDE_TYPES"
+                shift 2
+                ;;
+            -e|--exclude)
+                EXCLUDE_TYPES="$2"
+                validate_types "$EXCLUDE_TYPES"
+                shift 2
+                ;;
             -h|--help)
                 print_help
                 exit 0
@@ -465,6 +524,13 @@ main() {
     fi
     
     log_info "Generating changelog for: $(basename "$(run_git rev-parse --show-toplevel)")"
+    
+    # 显示过滤信息
+    if [ -n "$INCLUDE_TYPES" ]; then
+        log_info "Filter: Only including types: $INCLUDE_TYPES"
+    elif [ -n "$EXCLUDE_TYPES" ]; then
+        log_info "Filter: Excluding types: $EXCLUDE_TYPES"
+    fi
     
     # 生成 CHANGELOG
     local changelog_content
