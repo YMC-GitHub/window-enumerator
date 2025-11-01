@@ -1,4 +1,4 @@
-name: Publish to crates.io
+name: Publish to crates.io S
 
 on:
   push:
@@ -18,7 +18,7 @@ env:
 jobs:
   quality-check:
     name: Quality Check
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # 改为 Windows 环境
     
     steps:
       - name: Checkout repository
@@ -30,19 +30,29 @@ jobs:
           components: clippy, rustfmt
 
       - name: Check formatting
-        run: cargo fmt -- --check
+        run: |
+          # cargo fmt
+          cargo fmt -- --check
 
       - name: Clippy check
-        run: cargo clippy -- -D warnings
+        run: |
+          cargo clippy --all-features -- -D warnings
+          cargo clippy --all-features -- -D warnings --all-features
 
       - name: Run tests
         run: cargo test --all-features
+        run: |
+          # cargo test
+          cargo test --all-features
+
 
       - name: Build documentation
-        run: cargo doc --no-deps --all-features
+        run: |
+          cargo doc --no-deps --all-features
 
       - name: Verify package
-        run: cargo package --allow-dirty
+        run: |
+          cargo package --allow-dirty
 
       - name: Quality report
         run: |
@@ -52,7 +62,7 @@ jobs:
 
   publish:
     name: Publish to crates.io
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 发布可以在任何平台
     needs: quality-check
     if: >
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
@@ -82,7 +92,7 @@ jobs:
 
   dry-run:
     name: Dry Run
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # 改为 Windows 环境
     needs: quality-check
     if: github.event_name == 'workflow_dispatch' && inputs.dry_run
     
