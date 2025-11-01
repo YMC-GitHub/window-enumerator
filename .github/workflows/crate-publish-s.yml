@@ -80,8 +80,7 @@ jobs:
       - name: Publish to crates.io
         shell: bash
         run: |
-          # cargo publish --verbose
-          cargo publish --release --verbose
+          cargo publish --verbose
         
 
         env:
