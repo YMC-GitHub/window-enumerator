@@ -6,7 +6,7 @@ description = "A Rust library for enumerating and filtering windows with multipl
 authors = ["YeMiancheng <ymc.github@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/ymc-github/window-enumerator"
-keywords = ["windows", "enumeration", "process", "filter", "sort", "index"]
+keywords = ["windows-enumerator","filter", "sort", "selection"]
 categories = ["api-bindings", "system"]
 
 [features]
