@@ -33,6 +33,7 @@ optional = true
 all-features = true
 # 指定目标平台（如果需要）
 targets = ["x86_64-pc-windows-msvc"]
+rustc-args = ["--cfg", "docsrs"]
 
 [profile.release]
 # 平衡配置 - 适合系统库
