@@ -25,3 +25,21 @@ features = [
     "Win32_System_Diagnostics_ToolHelp",
 ]
 optional = true
+
+[profile.release]
+# 平衡配置 - 适合系统库
+lto = "thin"          # 较好的优化，编译时间可接受
+codegen-units = 16    # 默认并行编译
+panic = "unwind"      # 保持错误处理能力
+strip = "debuginfo"   # 只移除调试信息，保留符号
+opt-level = 3         # 标准优化
+incremental = false   # 发布构建禁用增量
+
+[profile.dev]
+panic = "unwind"
+opt-level = 0
+incremental = true
+debug = true
+
+[profile.bench]
+inherits = "release"  # 基准测试使用发布配置

@@ -78,7 +78,13 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Publish to crates.io
-        run: cargo publish --verbose
+        run: 
+        shell: bash
+        run: |
+          # cargo publish --verbose
+          cargo publish --release --verbose
+        
+
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
