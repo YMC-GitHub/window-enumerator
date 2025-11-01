@@ -1,6 +1,6 @@
 [package]
 name = "window-enumerator"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 description = "A Rust library for enumerating and filtering windows with multiple criteria including sorting and selection"
 authors = ["YeMiancheng <ymc.github@gmail.com>"]
@@ -8,6 +8,8 @@ license = "MIT"
 repository = "https://github.com/ymc-github/window-enumerator"
 keywords = ["windows-enumerator","filter", "sort", "selection"]
 categories = ["os", "development-tools"]
+readme = "README.md"
+documentation = "https://docs.rs/window-enumerator"
 
 [features]
 default = ["windows", "sorting", "selection"]
@@ -25,6 +27,12 @@ features = [
     "Win32_System_Diagnostics_ToolHelp",
 ]
 optional = true
+
+[package.metadata.docs.rs]
+# 启用所有特性以确保文档完整
+all-features = true
+# 指定目标平台（如果需要）
+targets = ["x86_64-pc-windows-msvc"]
 
 [profile.release]
 # 平衡配置 - 适合系统库
