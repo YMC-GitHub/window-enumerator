@@ -7,6 +7,9 @@
 
 A powerful Rust library for Windows window enumeration with advanced filtering, sorting, and selection capabilities.
 
+## Why Use Window Enumerator?
+- [user case in chinese](./user-case.why.zh.md)
+
 ## Features
 
 - **🔍 Window Enumeration** - Discover all visible windows on the system
