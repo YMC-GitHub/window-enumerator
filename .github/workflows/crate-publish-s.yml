@@ -40,7 +40,6 @@ jobs:
           cargo clippy --all-features -- -D warnings --all-features
 
       - name: Run tests
-        run: cargo test --all-features
         run: |
           # cargo test
           cargo test --all-features
