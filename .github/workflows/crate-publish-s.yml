@@ -56,8 +56,6 @@ jobs:
       - name: Quality report
         run: |
           echo "✅ 质量检查通过"
-          echo "📦 包名: $(grep '^name' Cargo.toml | cut -d '\"' -f2)"
-          echo "🏷️ 版本: $(grep '^version' Cargo.toml | cut -d '\"' -f2)"
 
   publish:
     name: Publish to crates.io
