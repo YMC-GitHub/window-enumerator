@@ -58,12 +58,12 @@ jobs:
         run: |
           echo "✅ 质量检查通过"
           NAME=$(grep '^name' Cargo.toml | cut -d '"' -f2)
-          VERSION=$(grep '^version' Cargo.toml | cut -d '"' -f2)
+          VERSION=$(grep '^version' Cargo.toml | cut -d '"' -f2 | head -n 1)
           echo "🎉  $NAME v$VERSION"
 
   publish:
     name: Publish to crates.io
-    runs-on: ubuntu-latest  # 发布可以在任何平台
+    runs-on: windows-latest  # 改为 Windows 环境
     needs: quality-check
     if: >
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
@@ -87,7 +87,7 @@ jobs:
         run: |
           sleep 10  # 等待索引更新
           NAME=$(grep '^name' Cargo.toml | cut -d '"' -f2)
-          VERSION=$(grep '^version' Cargo.toml | cut -d '"' -f2)
+          VERSION=$(grep '^version' Cargo.toml | cut -d '"' -f2 | head -n 1)
           echo "🎉 发布成功: $NAME v$VERSION"
           echo "📚 文档: https://docs.rs/$NAME/$VERSION/"
           echo "📦 页面: https://crates.io/crates/$NAME/$VERSION"
