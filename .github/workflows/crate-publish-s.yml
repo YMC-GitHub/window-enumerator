@@ -78,7 +78,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Publish to crates.io
-        run: 
         shell: bash
         run: |
           # cargo publish --verbose
