@@ -47,7 +47,17 @@
 mod errors;
 mod models;
 mod types;
-mod utils;
+// 条件性导出整个 utils 模块
+// #[cfg(any(feature = "selection", feature = "sorting"))]
+// pub mod utils;
+// 无条件导出整个 utils 模块
+// pub mod utils;
+
+/// Utility functions for window filtering, selection, and sorting.
+///
+/// This module provides helper functions for parsing selection strings,
+/// position sort criteria, and matching windows against filter criteria.
+pub mod utils;
 
 #[cfg(feature = "windows")]
 mod enumerator;
@@ -55,6 +65,8 @@ mod enumerator;
 pub use errors::*;
 pub use models::*;
 pub use types::*;
+
+
 
 // 公开导出工具函数
 #[cfg(feature = "selection")]
