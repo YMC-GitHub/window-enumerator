@@ -1,18 +1,24 @@
+## 编码助手 | 1
+```powershell
+sh ./scripts/pre.ai.sh -i src -o src_code.txt -a Cargo.toml
+cargo fmt;cargo fmt -- --check > src_fmt_log.txt 2>&1
+cargo clippy -- -D warnings > src_lint_log.txt 2>&1
+cargo test --all-features > src_test_log.txt 2>&1
+cargo doc --no-deps --all-features > src_docgen_log.txt 2>&1
+cargo package --allow-dirty > src_pack_log.txt 2>&1
+cargo publish --dry-run --registry crates-io --allow-dirty > src_publish_log.txt 2>&1
+```
+
+
 ## 编码助手
 ```sh
 sh ./scripts/pre.ai.sh -i src -o src_code.txt
 
 sh ./scripts/pre.ai.sh -i src -o src_code.txt -a Cargo.toml
 
-sh ./scripts/pre.ai.sh -i src -o src_code.txt -a Cargo.toml --ignore gui.rs
+sh ./scripts/pre.ai.sh -i src -o src_code.txt -a Cargo.toml --ignore gui.rs -a .github/workflows/crate-publish-s.yml
 
-sh ./scripts/pre.ai.sh -i src -o src_code.txt -a Cargo.toml
-cargo fmt -- --check > src_fmt_log.txt 2>&1
-cargo clippy -- -D warnings > src_lint_log.txt 2>&1
-cargo test --all-features > src_test_log.txt 2>&1
-cargo doc --no-deps --all-features > src_docgen_log.txt 2>&1
-cargo package --allow-dirty > src_pack_log.txt 2>&1
-cargo publish --dry-run --registry crates-io --allow-dirty > src_publish_log.txt 2>&1
+
 
 # workspace
 sh ./scripts/pre.ai.sh -i crates/cli -o src_code.txt -a Cargo.toml --ignore gui.rs
